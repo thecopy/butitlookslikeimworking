@@ -1,0 +1,91 @@
+#upper-left {
+    background-repeat: no-repeat;
+    background-image: url('upper-left.png');
+    width: 1131px;
+    height: 124px;
+	position:absolute;
+	top:0;
+	left:0;
+}
+
+#upper-right {
+    background-repeat: no-repeat;
+    background-image: url('upper-right.png');
+    width: 406px;
+    height: 239px;
+	position: absolute;
+	top:0;
+	right:0;
+}
+
+#upper {
+	background-repeat: repeat-x;
+    background-image: url('upper.png');
+    height: 124px;
+	position:absolute;
+	top:0;
+	right:0;
+	left:0;
+}
+
+#left {
+	background-repeat: repeat-y;
+    background-image: url('left.png');
+    width: 44px;
+	position: absolute;
+	top:0;
+	bottom:0;
+	left:0;
+}
+
+#lower {
+	background-repeat: repeat-x;
+    background-image: url('lower.png');
+    height: 71px;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+}
+
+#lower-left {
+    background-repeat: no-repeat;
+    background-image: url('lower-left.png');
+    width: 422px;
+    height: 71px;
+	position: absolute;
+	bottom: 0;
+	left: 0;
+}
+
+#lower-right {
+    background-repeat: no-repeat;
+    background-image: url('lower-right.png');
+    width: 406px;
+    height: 93px;
+	position: absolute;
+	bottom: 0;
+	right: 0;
+}
+
+#right {
+	background-repeat: repeat-y;
+    background-image: url('right.png');
+    width: 406px;
+	position: absolute;
+	top:0;
+	bottom:0;
+	right:0;
+}
+
+#text {
+	position: absolute;
+	top: 125px;
+	left: 45px;
+	right: 407px;
+	bottom: 72px;
+	border: none;
+	overflow: scroll;
+	margin: 0;
+	padding: 0;
+}
