@@ -84,8 +84,9 @@ window['PR_SHOULD_USE_CONTINUATION'] = true;
   var CSHARP_KEYWORDS = [JAVA_KEYWORDS,
       "as,base,by,checked,decimal,delegate,descending,dynamic,event," +
       "fixed,foreach,from,group,implicit,in,interface,internal,into,is,lock," +
-      "object,out,override,orderby,params,partial,readonly,ref,sbyte,sealed," +
-      "stackalloc,string,select,uint,ulong,unchecked,unsafe,ushort,var"];
+      "namespace, object,out,override,orderby,params,partial,readonly,ref,sbyte,sealed," +
+      "stackalloc,string,select,uint,ulong,unchecked,unsafe,ushort, using,var,int,bool"];
+
   var COFFEE_KEYWORDS = "all,and,by,catch,class,else,extends,false,finally," +
       "for,if,in,is,isnt,loop,new,no,not,null,of,off,on,or,return,super,then," +
       "true,try,unless,until,when,while,yes";

@@ -1,0 +1,90 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link href="site.css" rel="stylesheet" type="text/css" />
+    <link href="prettify.css" rel="stylesheet" type="text/css" />
+	<style type='text/css'>
+	.com { color: #008000; }
+	.str, .tag { color: #A31515; }
+	.kwd, .atv { color: #0000FF; }
+	.typ { color: #2B91AF; }
+	.lit, .atn { color: #FF0000; }
+	.pun, .pln { color: #000000; }
+	.dec { color: purple; }
+	
+	table {
+		width:100%;
+		height: 800px;
+	}
+</style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
+    <script src="prettify.js" type="text/javascript"></script>
+	<script type="text/javascript">
+	$(function() {
+		var source = "using System;\r\nusing System.Collections.Generic;\r\nusing System.Globalization;\r\nusing System.IO;\r\nusing System.Linq;\r\nusing System.Text;\r\n\r\nnamespace Parrot.Lexer\r\n{\r\n    public class Tokenizer\r\n    {\r\n        private readonly List<Token> _tokens = new List<Token>();\r\n        private int _currentIndex;\r\n        private readonly StreamReader _reader;\r\n\r\n        public Tokenizer(string source) : this(new MemoryStream(Encoding.Default.GetBytes(source))) { }\r\n\r\n        public Tokenizer(Stream source)\r\n        {\r\n            _reader = new StreamReader(source);\r\n        }\r\n\r\n        private bool HasAvailableTokens()\r\n        {\r\n            return _reader.Peek() != -1;\r\n        }\r\n\r\n        private int Consume()\r\n        {\r\n            _currentIndex += 1;\r\n            var character = _reader.Read();\r\n\r\n            if (character == -1)\r\n            {\r\n                throw new EndOfStreamException();\r\n            }\r\n\r\n            return character;\r\n        }\r\n\r\n        private Token GetNextToken()\r\n        {\r\n            int peek = _reader.Peek();\r\n            var currentCharacter = peek == -1 ? '\0' : (char)peek;\r\n\r\n            if (IsIdentifierHead(currentCharacter))\r\n            {\r\n                return new IdentifierToken\r\n                {\r\n                    Content = ConsumeIdentifier(),\r\n                    Index = _currentIndex,\r\n                    Type = TokenType.Identifier\r\n                };\r\n            }\r\n\r\n            if (IsWhitespace(currentCharacter))\r\n            {\r\n                return new WhitespaceToken\r\n                {\r\n                    Content = ConsumeWhitespace(),\r\n                    Index = _currentIndex,\r\n                    Type = TokenType.Whitespace\r\n                };\r\n            }\r\n\r\n            switch (currentCharacter)\r\n            {\r\n                case ',': //this is for the future\r\n                    Consume();\r\n                    return new CommaToken { Index = _currentIndex };\r\n                case '(': //parameter list start\r\n                    Consume();\r\n                    return new OpenParenthesisToken { Index = _currentIndex };\r\n                case ')': //parameter list end\r\n                    Consume();\r\n                    return new CloseParenthesisToken { Index = _currentIndex };\r\n                case '[': //attribute list start\r\n                    Consume();\r\n                    return new OpenBracketToken { Index = _currentIndex };\r\n                case ']': //attribute list end\r\n                    Consume();\r\n                    return new CloseBracketToken { Index = _currentIndex };\r\n                case '=': //attribute assignment, raw output\r\n                    Consume();\r\n                    return new EqualToken { Index = _currentIndex };\r\n                case '{': //child block start\r\n                    Consume();\r\n                    return new OpenBracesToken { Index = _currentIndex };\r\n                case '}': //child block end\r\n                    Consume();\r\n                    return new CloseBracesToken { Index = _currentIndex };\r\n                case '>': //child assignment\r\n                    Consume();\r\n                    return new GreaterThanToken { Index = _currentIndex };\r\n                case '+': //sibling assignment\r\n                    Consume();\r\n                    return new PlusToken { Index = _currentIndex };\r\n                case '|': //string literal pipe\r\n                    return new StringLiteralPipeToken\r\n                    {\r\n                        Content = ConsumeUntilNewline(),\r\n                        Type = TokenType.StringLiteralPipe,\r\n                        Index = _currentIndex\r\n                    };\r\n                case '\"': //quoted string literal\r\n                    return new QuotedStringLiteralToken\r\n                    {\r\n                        Content = ConsumeQuotedStringLiteral('\"'),\r\n                        Type = TokenType.QuotedStringLiteral,\r\n                        Index = _currentIndex\r\n                    };\r\n                case '\'': //quoted string literal\r\n                    return new QuotedStringLiteralToken\r\n                    {\r\n                        Content = ConsumeQuotedStringLiteral('\''),\r\n                        Type = TokenType.QuotedStringLiteral,\r\n                        Index = _currentIndex\r\n                    };\r\n                case '@': //Encoded output\r\n                    Consume();\r\n                    return new AtToken { Index = _currentIndex };\r\n                case '\0':\r\n                    return null;\r\n                default:\r\n                    throw new UnexpectedTokenException(string.Format(\"Unexpected token: {0}\", currentCharacter));\r\n            }\r\n        }\r\n\r\n        private string ConsumeUntilNewline()\r\n        {\r\n            //(char)Consume() + ReadUntil(IsNewLine)\r\n            StringBuilder sb = new StringBuilder();\r\n            int peek = _reader.Peek();\r\n            var currentCharacter = peek == -1 ? '\0' : (char)peek;\r\n\r\n            while (!IsNewLine(currentCharacter))\r\n            {\r\n                Consume();\r\n                sb.Append(currentCharacter);\r\n                peek = _reader.Peek();\r\n                currentCharacter = peek == -1 ? '\0' : (char)peek;\r\n            }\r\n\r\n            return sb.ToString();\r\n        }\r\n\r\n        private string ConsumeIdentifier()\r\n        {\r\n            StringBuilder sb = new StringBuilder();\r\n            int peek = _reader.Peek();\r\n            var currentCharacter = peek == -1 ? '\0' : (char)peek;\r\n\r\n            while ((IsIdTail(currentCharacter)))\r\n            {\r\n                Consume();\r\n                sb.Append(currentCharacter);\r\n                peek = _reader.Peek();\r\n                currentCharacter = peek == -1 ? '\0' : (char)peek;\r\n            }\r\n\r\n            return sb.ToString();\r\n        }\r\n\r\n        private string ConsumeWhitespace()\r\n        {\r\n            StringBuilder sb = new StringBuilder();\r\n            int peek = _reader.Peek();\r\n            var currentCharacter = peek == -1 ? '\0' : (char)peek;\r\n\r\n            while ((IsWhitespace(currentCharacter)))\r\n            {\r\n                Consume();\r\n                sb.Append(currentCharacter);\r\n                peek = _reader.Peek();\r\n                currentCharacter = peek == -1 ? '\0' : (char)peek;\r\n            }\r\n\r\n            return sb.ToString();\r\n        }\r\n\r\n        private string ConsumeQuotedStringLiteral(char quote)\r\n        {\r\n            StringBuilder sb = new StringBuilder();\r\n            sb.Append((char)Consume());\r\n            int peek = _reader.Peek();\r\n            var currentCharacter = peek == -1 ? '\0' : (char)peek;\r\n\r\n            while (currentCharacter != quote)\r\n            {\r\n                Consume();\r\n                sb.Append(currentCharacter);\r\n                peek = _reader.Peek();\r\n                currentCharacter = peek == -1 ? '\0' : (char)peek;\r\n            }\r\n\r\n            sb.Append((char)Consume());\r\n            return sb.ToString();\r\n        }\r\n\r\n        private bool IsWhitespace(char character)\r\n        {\r\n            return\r\n                   character == '\r' ||\r\n                   character == '\n' ||\r\n                   character == ' ' ||\r\n                   character == '\f' ||\r\n                   character == '\t' ||\r\n                   character == '\u000B' || // Vertical Tab\r\n                   Char.GetUnicodeCategory(character) == UnicodeCategory.SpaceSeparator;\r\n        }\r\n\r\n        private bool IsIdentifierHead(char character)\r\n        {\r\n            return Char.IsLetter(character) ||\r\n                   character == '_' ||\r\n                   character == '#' ||\r\n                   character == '.' ||\r\n                   Char.GetUnicodeCategory(character) == UnicodeCategory.LetterNumber;\r\n        }\r\n\r\n        private bool IsIdTail(char character)\r\n        {\r\n            return Char.IsDigit(character) ||\r\n                   IsIdentifierHead(character) ||\r\n                   character == ':' ||\r\n                   character == '-' ||\r\n                   IsIdentifierUnicode(character);\r\n        }\r\n\r\n        private bool IsIdentifierUnicode(char character)\r\n        {\r\n            UnicodeCategory category = Char.GetUnicodeCategory(character);\r\n\r\n            return category == UnicodeCategory.NonSpacingMark ||\r\n                   category == UnicodeCategory.SpacingCombiningMark ||\r\n                   category == UnicodeCategory.ConnectorPunctuation ||\r\n                   category == UnicodeCategory.Format;\r\n        }\r\n\r\n        private bool IsNewLine(char character)\r\n        {\r\n            return character == '\r' // Carriage return\r\n                || character == '\n' // Linefeed\r\n                || character == '\u0085' // Next Line\r\n                || character == '\u2028' // Line separator\r\n                || character == '\u2029'; // Paragraph separator\r\n        }\r\n\r\n        public List<Token> Tokenize()\r\n        {\r\n            try\r\n            {\r\n                Token token;\r\n                while ((token = GetNextToken()) != null)\r\n                {\r\n                    _tokens.Add(token);\r\n                }\r\n            }\r\n            catch(EndOfStreamException)\r\n            {\r\n                throw new ParserException(\"\");\r\n            }\r\n\r\n            return _tokens;\r\n        }\r\n\r\n        public IList<Token> Tokens()\r\n        {\r\n            return Tokenize();\r\n        }\r\n    }\r\n}\r\n";
+		var index = 0;
+		var destination = $("#text");
+		var copy = "";
+		
+		function updateInterface(text) {
+			destination.text(text);
+			prettyPrint();
+			
+			destination.animate({ 
+				scrollTop: 1000000
+			});
+		}
+		
+		$(document).keypress(function(e) {
+			while(source[index] == ' ') {
+				index ++;
+			}
+			
+			if (index < source.length) {
+				copy = source.substr(0, index);
+				index ++;
+				updateInterface(copy);
+			
+			}
+		});
+	});
+	</script>
+	<link href="visual-studio-light/theme.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+	<div id='left'></div>
+	<div id='right'></div>
+	
+	<div id='upper'></div>
+	<div id='upper-left'></div>
+	<div id='upper-right'></div>
+
+	<div id='lower'></div>
+	<div id='lower-left'></div>
+	<div id='lower-right'></div>
+	
+	<pre id="text" class="prettyprint lang-c"></pre>
+	
+	<!-- <table border='1'>
+		<tr>
+			<td id='upper-left'></td>
+			<td id='upper'></td>
+			<td id='upper-right'></td>
+		</td>
+		<tr>
+			<td id='left'></td>
+			<td id='text-area'></td>
+			<td id='right'></td>
+		</td>
+		<tr>
+			<td id='lower-left'></td>
+			<td id='lower'></td>
+			<td id='lower-right'></td>
+		</td>
+	</table> -->
+</body>
+</html>
